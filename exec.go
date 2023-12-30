@@ -23,6 +23,10 @@ type Output struct {
 	StdErr string
 }
 
+func (o Output) Combine() string {
+	return o.StdOut + o.StdErr
+}
+
 func Spawn(ctx context.Context, cmd *exec.Cmd) (Output, error) {
 	cmd.SysProcAttr = &unix.SysProcAttr{Setpgid: true}
 
