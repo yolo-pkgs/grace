@@ -46,8 +46,11 @@ func RunTimed(command string, timeout time.Duration) (string, error) {
 	defer cancel()
 
 	commandFields := strings.Fields(command)
+	args := make([]string, 0)
+	if len(commandFields) > 1 {
+		args = commandFields[1:]
+	}
 	bin := commandFields[0]
-	args := commandFields[1:]
 
 	output, err := Spawn(ctx, exec.Command(bin, args...))
 	if err != nil {
