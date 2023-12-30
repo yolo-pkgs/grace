@@ -1,7 +1,7 @@
 //go:build unix
 // +build unix
 
-package cmdgrace
+package grace
 
 import (
 	"context"
