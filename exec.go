@@ -9,6 +9,8 @@ import (
 	"io"
 	"log/slog"
 	"os/exec"
+	"strings"
+	"time"
 
 	"golang.org/x/sys/unix"
 )
@@ -25,6 +27,21 @@ type Output struct {
 
 func (o Output) Combine() string {
 	return o.StdOut + o.StdErr
+}
+
+func RunTimed(command string, timeout time.Duration) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	commandFields := strings.Fields(command)
+	bin := commandFields[0]
+	args := commandFields[1:]
+
+	output, err := Spawn(ctx, exec.Command(bin, args...))
+	if err != nil {
+		return "", err
+	}
+	return output.Combine(), nil
 }
 
 func Spawn(ctx context.Context, cmd *exec.Cmd) (Output, error) {
