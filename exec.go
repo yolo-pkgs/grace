@@ -6,6 +6,7 @@ package grace
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"os/exec"
@@ -27,6 +28,17 @@ type Output struct {
 
 func (o Output) Combine() string {
 	return o.StdOut + o.StdErr
+}
+
+func RunShTimed(command string, timeout time.Duration) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	output, err := Spawn(ctx, exec.Command("sh", "-c", fmt.Sprintf(`'%s'`, command)))
+	if err != nil {
+		return "", err
+	}
+	return output.Combine(), nil
 }
 
 func RunTimed(command string, timeout time.Duration) (string, error) {
