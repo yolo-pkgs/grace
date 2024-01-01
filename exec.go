@@ -34,7 +34,7 @@ func RunTimedSh(timeout time.Duration, command string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	output, err := Spawn(ctx, exec.Command("sh", "-c", fmt.Sprintf(`'%s'`, command)))
+	output, err := Spawn(ctx, exec.Command("sh", "-c", command))
 	if err != nil {
 		return "", err
 	}
