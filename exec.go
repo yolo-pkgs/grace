@@ -6,7 +6,6 @@ package grace
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"os/exec"
