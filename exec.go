@@ -31,7 +31,7 @@ func (o Output) Combine() string {
 }
 
 // Command is wrapped in single quotes!
-func RunShTimed(command string, timeout time.Duration) (string, error) {
+func RunTimedSh(timeout time.Duration, command string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -42,18 +42,11 @@ func RunShTimed(command string, timeout time.Duration) (string, error) {
 	return output.Combine(), nil
 }
 
-func RunTimed(command string, timeout time.Duration) (string, error) {
+func RunTimed(timeout time.Duration, cmd string, args ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	commandFields := strings.Fields(command)
-	args := make([]string, 0)
-	if len(commandFields) > 1 {
-		args = commandFields[1:]
-	}
-	bin := commandFields[0]
-
-	output, err := Spawn(ctx, exec.Command(bin, args...))
+	output, err := Spawn(ctx, exec.Command(cmd, args...))
 	if err != nil {
 		return "", err
 	}
