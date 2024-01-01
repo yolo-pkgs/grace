@@ -10,7 +10,6 @@ import (
 	"io"
 	"log/slog"
 	"os/exec"
-	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
