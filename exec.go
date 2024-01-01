@@ -30,6 +30,7 @@ func (o Output) Combine() string {
 	return o.StdOut + o.StdErr
 }
 
+// Command is wrapped in single quotes!
 func RunShTimed(command string, timeout time.Duration) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
