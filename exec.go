@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"os"
 	"os/exec"
 	"time"
 
@@ -40,11 +41,14 @@ func RunTimedSh(timeout time.Duration, command string) (string, error) {
 	return output.Combine(), nil
 }
 
-func RunTimed(timeout time.Duration, cmd string, args ...string) (string, error) {
+func RunTimed(timeout time.Duration, env []string, cmd string, args ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	output, err := Spawn(ctx, exec.Command(cmd, args...))
+	command := exec.Command(cmd, args...)
+	command.Env = append(os.Environ(), env...)
+
+	output, err := Spawn(ctx, command)
 	if err != nil {
 		return "", err
 	}
