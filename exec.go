@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log/slog"
 	"os"
 	"os/exec"
 	"time"
@@ -21,8 +20,9 @@ var (
 )
 
 type Output struct {
-	StdOut string
-	StdErr string
+	StdOut   string
+	StdErr   string
+	ExitCode int
 }
 
 func (o Output) Combine() string {
@@ -41,7 +41,7 @@ func RunTimedSh(timeout time.Duration, command string) (string, error) {
 	return output.Combine(), nil
 }
 
-func RunTimed(timeout time.Duration, env []string, cmd string, args ...string) (string, error) {
+func RunTimed(timeout time.Duration, env []string, cmd string, args ...string) (Output, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -50,9 +50,10 @@ func RunTimed(timeout time.Duration, env []string, cmd string, args ...string) (
 
 	output, err := Spawn(ctx, command)
 	if err != nil {
-		return "", err
+		return Output{}, err
 	}
-	return output.Combine(), nil
+
+	return output, nil
 }
 
 func Spawn(ctx context.Context, cmd *exec.Cmd) (Output, error) {
@@ -86,13 +87,21 @@ func Spawn(ctx context.Context, cmd *exec.Cmd) (Output, error) {
 			errChan <- err
 		}
 
+		exitCode := 0
+
 		if err := cmd.Wait(); err != nil {
-			errChan <- err
+			if exitError, ok := err.(*exec.ExitError); ok {
+				exitCode = exitError.ExitCode()
+			} else {
+				errChan <- err
+				return
+			}
 		}
 
 		outChan <- Output{
-			StdOut: string(stdOutput),
-			StdErr: string(stdError),
+			StdOut:   string(stdOutput),
+			StdErr:   string(stdError),
+			ExitCode: exitCode,
 		}
 	}()
 
@@ -105,7 +114,7 @@ func Spawn(ctx context.Context, cmd *exec.Cmd) (Output, error) {
 		if err := unix.Kill(-cmd.Process.Pid, unix.SIGTERM); err == nil {
 			return Output{}, ErrTimeout
 		}
-		slog.Warn("sending SIGKILL", slog.Int("pid", cmd.Process.Pid), slog.String("cmd", cmd.String()))
+
 		err := unix.Kill(-cmd.Process.Pid, unix.SIGKILL)
 		if err == nil {
 			return Output{}, ErrTimeout
